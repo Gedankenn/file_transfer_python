@@ -9,6 +9,7 @@ import argparse
 from zipfile import ZipFile
 from os.path import basename
 
+port = 5001
 
 def get_current_ipv6():
 
@@ -21,7 +22,7 @@ def get_current_ipv6():
 def receiv():
     # device's IP address
     SERVER_HOST = get_current_ipv6()
-    SERVER_PORT = 5001
+    SERVER_PORT = port
 
     ### Printa na tela o endereco ip para poder ser copiado
     print(SERVER_HOST)
@@ -153,7 +154,6 @@ if __name__ == "__main__":
 #        port = args.port
         filename = input("Nome do arquivo \n")
         host = input("Endereço ipv6 do host")
-        port = 5001
 
         send_file(filename, host, port)
     if(menu == 2):
