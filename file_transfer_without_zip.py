@@ -30,8 +30,8 @@ class files:
     def __init__(self, file_name, file_path):
         self.name = file_name
         self.path = file_path
-        self.is_dir = os.path.isdir(file_path+'\\'+file_name)
-        self.size = os.path.getsize(file_path+"\\"+file_name)
+        self.is_dir = os.path.isdir(file_path+'/'+file_name)
+        self.size = os.path.getsize(file_path+"/"+file_name)
 
 def get_current_ipv6():
 
@@ -43,15 +43,14 @@ def get_current_ipv6():
 
 
 def dir_walk(path,osfiles, total_size):
-    total_size = 0
     for file_name in os.listdir(path):
         if file_name[0] != ".":
-            # print(file_name)
+            print(file_name)
             stfile=files(file_name,path)
             osfiles.append(stfile)
-            path2 = path+"\\"+file_name
+            path2 = path+"/"+file_name
             if stfile.is_dir == True:
-                # print("-->",end='')
+                print("-->",end='')
                 dir_walk(path2,osfiles,total_size)
             else:
                 total_size = total_size+os.path.getsize(path2)
@@ -96,25 +95,29 @@ def receiv():
         print(received.split(SEPARATOR))
         file_name = os.path.basename(file_name)
         file_size = int(file_size)
-        is_dir = bool(is_dir)
+        is_dir = is_dir == 'True'
         print(f"File name: {file_name}")
         print(f"File path: {file_path}")
         print(f"File size: {file_size}")
         print(f"Is dir: {is_dir}")
         if is_dir:
-            # print(f"{local_path}\\{file_path}\\{parent_path}\\{file_name}")
-            os.makedirs(local_path+ "\\" + parent_path+"\\" +file_name)
+            # print(f"{local_path}/{file_path}/{parent_path}/{file_name}")
+            os.makedirs(local_path + "/" + parent_path + "/" + file_path + "/" + file_name)
         else:
             progress2 = tqdm.tqdm(range(file_size),f"Receiving {file_name}",unit="B",unit_scale=True,unit_divisor=1024)
-            f = open(local_path + "\\" + parent_path+"\\" +file_name,"wb")
-            while True:
+            print(f"open = {local_path}/{parent_path}/{file_path}/{file_name}")
+            f = open(local_path + "/" + parent_path+"/" +file_path+ "/" +file_name,"wb")
+            size = 0
+            while size < file_size:
                 bytes_read = client_socket.recv(BUFFER_SIZE)
+                size=size+len(bytes_read)
                 if not bytes_read:
                     # Finished receiving bytes from file
                     break
                 f.write(bytes_read)
                 progress2.update(len(bytes_read))
             f.close()
+        files_count = files_count+1
     
     client_socket.close()
     s.close()
@@ -122,10 +125,10 @@ def receiv():
 
 def send_file(file_name,host,port):
     osfiles = []
-    # osfiles.append(files(file_name,os.getcwd()))
+    osfiles.append(files(file_name,"."))
     total_size = 0
     dir_walk(file_name,osfiles, total_size)
-
+    total_size = os.path.getsize(file_name)
     # Create de cliente socket
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
     print(f"[+] Connecting to {host}:{port}")
@@ -141,14 +144,14 @@ def send_file(file_name,host,port):
         time.sleep(1)
         if file_to_send.is_dir == False:
             progress = tqdm.tqdm(range(file_to_send.size),f"Sending {file_to_send.name}",unit="B",unit_scale=True,unit_divisor=1024)
-            f = open(file_to_send.path+"\\"+file_to_send.name,"rb")
+            f = open(file_to_send.path+"/"+file_to_send.name,"rb")
             while True:
                 bytes_read = f.read(BUFFER_SIZE)
                 if not bytes_read:
                     break
                 s.sendall(bytes_read)
                 progress.update(len(bytes_read))
-
+            time.sleep(1)
             f.close()
 
     # Close the socket
