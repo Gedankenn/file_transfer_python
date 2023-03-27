@@ -1,15 +1,47 @@
-"""
-Server receiver of the file
-"""
 import socket
 import tqdm
 import os
 import requests
 import argparse
-from zipfile import ZipFile
-from os.path import basename
+import time
+import shutil
+import platform
 
-port = 5001
+SERVER_PORT = 5001
+BUFFER_SIZE = 1024*4
+SEPARATOR = "<SEPARATOR>"
+
+windows = "\\"
+linux = "/"
+barra = ""
+
+if platform.system() == "Windows":
+    barra = windows
+else:
+    barra = linux
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+class files:
+    name = ""
+    is_dir = ""
+    path = ""
+    size = 0
+
+    def __init__(self, file_name, file_path):
+        self.name = file_name
+        self.path = file_path
+        self.is_dir = os.path.isdir(file_path+barra+file_name)
+        self.size = os.path.getsize(file_path+barra+file_name)
 
 def get_current_ipv6():
 
@@ -17,144 +49,153 @@ def get_current_ipv6():
     try:
         return requests.get("https://api6.ipify.org", timeout=5).text
     except requests.exceptions.ConnectionError as ex:
-        return None
+        return "No IPv6 ENABLED"
+
+
+def dir_walk(path,osfiles, total_size):
+    if os.path.isdir(path):
+        for file_name in os.listdir(path):
+            if file_name[0] != ".":
+                print(file_name)
+                stfile=files(file_name,path)
+                osfiles.append(stfile)
+                path2 = path+barra+file_name
+                if stfile.is_dir == True:
+                    print("-->",end='')
+                    dir_walk(path2,osfiles,total_size)
+                else:
+                    total_size = total_size+os.path.getsize(path2)
+    else:
+        osfiles.append(files(path,"."))
 
 def receiv():
-    # device's IP address
-    SERVER_HOST = get_current_ipv6()
-    SERVER_PORT = port
+    host = get_current_ipv6()
+    print("IPV6 = "+host)
+    port = SERVER_PORT
 
-    ### Printa na tela o endereco ip para poder ser copiado
-    print(SERVER_HOST)
-
-    # receive 4096 bytes each time
-    BUFFER_SIZE = 1024 * 4 #4KB
-    SEPARATOR = "<SEPARATOR>"
-    # create the server socket
-    # TCP socket
-
+    #Create socket server
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+    #Bind de socket to ipv6 address
+    s.bind((host,port))
+    #Listen port
+    s.listen(20)
+    print(f"{bcolors.BOLD}{bcolors.FAIL}[*] Listening as {host}{port}")
+    #Accept connection
+    client_socket, address = s.accept()
+    print(f"[+] {address} is connected{bcolors.ENDC}")
 
-    # bind the socket to our local address
-    s.bind((SERVER_HOST, SERVER_PORT))
-    # enabling our server to accept connections
-    # 5 here is the number of unaccepted connections that
-    # the system will allow before refusing new connections
-    s.listen(5)
-
-    print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
-
-    # accept connection if there is any
-    client_socket, address = s.accept() 
-    # if below code is executed, that means the sender is connected
-    print(f"[+] {address} is connected.")
-
-    # receive the file infos
-    # receive using client socket, not server socket
+    #receiv the total number os files and directories that will be transmited
+    # send("{total_files}{SEPARATOR}{total_size}")
     received = client_socket.recv(BUFFER_SIZE).decode()
-    filename, filesize = received.split(SEPARATOR)
-    # remove absolute path if there is
-    filename = os.path.basename(filename)
-    # convert to integer
-    filesize = int(filesize)
-    # start receiving the file from the socket
-    # and writing to the file stream
-    progress = tqdm.tqdm(range(filesize), f"Receiving {filename}", unit="B", unit_scale=True, unit_divisor=1024)
-    with open("unzip.zip", "wb") as f:
-        while True:
-            # read 1024 bytes from the socket (receive)
-            bytes_read = client_socket.recv(BUFFER_SIZE)
-            if not bytes_read:    
-                # nothing is received
-                # file transmitting is done
-                break
-            # write to the file the bytes we just received
-            f.write(bytes_read)
-            # update the progress bar
-            progress.update(len(bytes_read))
+    # received = client_socket.recvfrom(BUFFER_SIZE)
+    print(received.split(SEPARATOR))
+    total_files, total_size = received.split(SEPARATOR)
+    #remove absolute path if there is one
+    total_size = int(total_size)
+    total_files = int(total_files)
 
-    # close the client socket
+    parent_path = "Receiv"
+
+    if os.path.exists(parent_path):
+        shutil.rmtree(parent_path,ignore_errors=True)
+    
+    os.makedirs(parent_path)
+    local_path = os.getcwd()
+    files_count = 0
+    while(files_count < total_files):
+        received = client_socket.recv(BUFFER_SIZE).decode()
+        file_name,file_path, file_size, is_dir = received.split(SEPARATOR)
+        # print(received.split(SEPARATOR))
+        file_name = os.path.basename(file_name)
+        file_size = int(file_size)
+        is_dir = is_dir == 'True'
+        # print(f"File name: {file_name}")
+        # print(f"File path: {file_path}")
+        # print(f"File size: {file_size}")
+        # print(f"Is dir: {is_dir}")
+        if is_dir:
+            # print(f"{local_path}/{file_path}/{parent_path}/{file_name}")
+            os.makedirs(local_path + barra + parent_path + barra + file_path + barra + file_name)
+        else:
+            progress2 = tqdm.tqdm(range(file_size),f"Receiving {file_name}",unit="B",unit_scale=True,unit_divisor=1024)
+            print(f"{bcolors.BOLD}{bcolors.OKGREEN}open = {local_path}/{parent_path}/{file_path}/{file_name}{bcolors.ENDC}")
+            f = open(local_path + barra + parent_path+barra +file_path+ barra +file_name,"wb")
+            size = 0
+            while size < file_size:
+                bytes_read = client_socket.recv(BUFFER_SIZE)
+                size=size+len(bytes_read)
+                if not bytes_read:
+                    # Finished receiving bytes from file
+                    break
+                f.write(bytes_read)
+                progress2.update(len(bytes_read))
+            f.close()
+        files_count = files_count+1
+    
     client_socket.close()
-    # close the server socket
     s.close()
     f.close()
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}Transfer Finished{bcolors.ENDC}")
 
-    with ZipFile("unzip.zip", 'r') as file:
-        print('Extracting all files...')
-        file.extractall(filename)
-        print('Done!') # check your directory of zip file to see the extracted files\
-
-    os.remove("unzip.zip")
-
-
-def send_file(filename, host, port):
-    # get the file size
-    BUFFER_SIZE = 1024 * 4 #4KB
-    SEPARATOR = "<SEPARATOR>"
-    filesize = os.path.getsize(filename)
-    # create the client socket
+def send_file(file_name,host,port):
+    osfiles = []
+    osfiles.append(files(file_name,"."))
+    total_size = 0
+    dir_walk(file_name,osfiles, total_size)
+    total_size = os.path.getsize(file_name)
+    # Create de cliente socket
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
     print(f"[+] Connecting to {host}:{port}")
-    s.connect((host, port))
-    print("[+] Connected.")
+    s.connect((host,port))
+    print("[+] Connected")
+    #First send total files, and total size to be send
+    s.send(f"{len(osfiles)}{SEPARATOR}{total_size}".encode())
+    time.sleep(1)
+    # Start sending all files and directories
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
+    while len(osfiles) > 0:
+        file_to_send = osfiles.pop(0)
+        s.send(f"{file_to_send.name}{SEPARATOR}{file_to_send.path}{SEPARATOR}{file_to_send.size}{SEPARATOR}{file_to_send.is_dir}".encode())
+        time.sleep(1)
+        if file_to_send.is_dir == False:
+            progress = tqdm.tqdm(range(file_to_send.size),f"Sending {file_to_send.name}",unit="B",unit_scale=True,unit_divisor=1024)
+            f = open(file_to_send.path+barra+file_to_send.name,"rb")
+            while True:
+                bytes_read = f.read(BUFFER_SIZE)
+                if not bytes_read:
+                    break
+                s.sendall(bytes_read)
+                progress.update(len(bytes_read))
+            time.sleep(1)
+            f.close()
 
-    #Create a zip file
-    with ZipFile('send.zip', 'w') as zipObj:
-        # Iterate over all the files in directory
-        dirName = filename
-        for folderName, subfolders, filenames in os.walk(dirName):
-            for filename_zip in filenames:
-                #create complete filepath of file in directory
-                filePath = os.path.join(folderName, filename_zip)
-                # Add file to zip
-                zipObj.write(filePath, basename(filePath))
-
-    # send the filename and filesize
-    filesize = os.path.getsize("send.zip")
-    s.send(f"{dirName}{SEPARATOR}{filesize}".encode())
-
-    # start sending the file
-    progress = tqdm.tqdm(range(filesize), f"Sending {filename}", unit="B", unit_scale=True, unit_divisor=1024)
-    with open("send.zip", "rb") as f:
-        while True:
-            # read the bytes from the file
-            bytes_read = f.read(BUFFER_SIZE)
-            if not bytes_read:
-                # file transmitting is done
-                break
-            # we use sendall to assure transimission in 
-            # busy networks
-            s.sendall(bytes_read)
-            # update the progress bar
-            progress.update(len(bytes_read))
-
-    os.remove("send.zip")
-
-    # close the socket
+    # Close the socket
     s.close()
+    print(f"Transfer Finished{bcolors.ENDC}")
 
-if __name__ == "__main__":
+
+
+
+def main():
+    osfiles = []
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
     print("\033[1m\033[91m----===== Programa de compartilhamento de arquivos =====----\033[0m")
     print("\033[1m\033[91m--------------------\033[0m")
-    print("\033[1m\033[91m|1- Enviar arquivo |\033[0m")
-    print("\033[1m\033[91m|2- Receber arquivo|\033[0m")
+    print("\033[1m\033[91m|1- Send File    |\033[0m")
+    print("\033[1m\033[91m|2- Receive File |\033[0m")
     print("\033[1m\033[91m--------------------\n\033[0m")
     menu = input("Digite o valor da função que deseja: \n")
+    print(f"{bcolors.ENDC}")
     menu = int(menu)
 
     if(menu == 1):
-#        import argparse
-#        parser = argparse.ArgumentParser(description="Simple File Sender")
-#        parser.add_argument("file", help="File name to send")
-#        parser.add_argument("host", help="The host/IP address of the receiver")
-#        parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
-#        args = parser.parse_args()
-#        filename = args.file
-#        host = args.host
-#        port = args.port
         filename = input("Nome do arquivo \n")
         host = input("Endereço ipv6 do host")
-
+        port = SERVER_PORT
         send_file(filename, host, port)
     if(menu == 2):
         receiv()
+
+
+if __name__ == "__main__":
+    main()
