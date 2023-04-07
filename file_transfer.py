@@ -104,16 +104,10 @@ def receiv():
     while(files_count < total_files):
         received = client_socket.recv(BUFFER_SIZE).decode()
         file_name,file_path, file_size, is_dir = received.split(SEPARATOR)
-        # print(received.split(SEPARATOR))
         file_name = os.path.basename(file_name)
         file_size = int(file_size)
         is_dir = is_dir == 'True'
-        # print(f"File name: {file_name}")
-        # print(f"File path: {file_path}")
-        # print(f"File size: {file_size}")
-        # print(f"Is dir: {is_dir}")
         if is_dir:
-            # print(f"{local_path}/{file_path}/{parent_path}/{file_name}")
             os.makedirs(local_path + barra + parent_path + barra + file_path + barra + file_name)
         else:
             progress2 = tqdm.tqdm(range(file_size),f"Receiving {file_name}",unit="B",unit_scale=True,unit_divisor=1024)
@@ -140,7 +134,6 @@ def send_file(file_name,filepath,host,port):
     osfiles = []
     osfiles.append(files(file_name,filepath))
     total_size = 0
-    # print(f"{bcolors.BOLD}{bcolors.FAIL}{filepath}{file_name}{bcolors.ENDC}")
     dir_walk(filepath+file_name,osfiles, total_size)
     total_size = os.path.getsize(filepath+file_name)
     # Create de cliente socket
@@ -155,8 +148,6 @@ def send_file(file_name,filepath,host,port):
     print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
     while len(osfiles) > 0:
         file_to_send = osfiles.pop(0)
-        # print(f"Initial filepath:{filepath}")
-        # print(f"{bcolors.BOLD}{bcolors.OKGREEN}File path: {file_to_send.path}\nFile Path after strip: {file_to_send.path.split(filepath)[1]}\n File Name: {file_to_send.name}{bcolors.ENDC}")
         s.send(f"{file_to_send.name}{SEPARATOR}{file_to_send.path.split(filepath)[1]}{SEPARATOR}{file_to_send.size}{SEPARATOR}{file_to_send.is_dir}".encode())
         time.sleep(1)
         if file_to_send.is_dir == False:
