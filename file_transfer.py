@@ -6,6 +6,7 @@ import argparse
 import time
 import shutil
 import platform
+import button
 
 SERVER_PORT = 5001
 BUFFER_SIZE = 1024*4
@@ -117,7 +118,7 @@ def receiv():
         else:
             progress2 = tqdm.tqdm(range(file_size),f"Receiving {file_name}",unit="B",unit_scale=True,unit_divisor=1024)
             print(f"{bcolors.BOLD}{bcolors.OKGREEN}open = {local_path}/{parent_path}/{file_path}/{file_name}{bcolors.ENDC}")
-            f = open(local_path + barra + parent_path+barra +file_path+ barra +file_name,"wb")
+            f = open(local_path + barra + parent_path + barra + file_path + barra +file_name,"wb")
             size = 0
             while size < file_size:
                 bytes_read = client_socket.recv(BUFFER_SIZE)
@@ -135,12 +136,13 @@ def receiv():
     f.close()
     print(f"{bcolors.BOLD}{bcolors.OKGREEN}Transfer Finished{bcolors.ENDC}")
 
-def send_file(file_name,host,port):
+def send_file(file_name,filepath,host,port):
     osfiles = []
-    osfiles.append(files(file_name,"."))
+    osfiles.append(files(file_name,filepath))
     total_size = 0
-    dir_walk(file_name,osfiles, total_size)
-    total_size = os.path.getsize(file_name)
+    # print(f"{bcolors.BOLD}{bcolors.FAIL}{filepath}{file_name}{bcolors.ENDC}")
+    dir_walk(filepath+file_name,osfiles, total_size)
+    total_size = os.path.getsize(filepath+file_name)
     # Create de cliente socket
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
     print(f"{bcolors.BOLD}{bcolors.OKGREEN}[+] Connecting to {host}:{port}")
@@ -153,7 +155,9 @@ def send_file(file_name,host,port):
     print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
     while len(osfiles) > 0:
         file_to_send = osfiles.pop(0)
-        s.send(f"{file_to_send.name}{SEPARATOR}{file_to_send.path}{SEPARATOR}{file_to_send.size}{SEPARATOR}{file_to_send.is_dir}".encode())
+        # print(f"Initial filepath:{filepath}")
+        # print(f"{bcolors.BOLD}{bcolors.OKGREEN}File path: {file_to_send.path}\nFile Path after strip: {file_to_send.path.split(filepath)[1]}\n File Name: {file_to_send.name}{bcolors.ENDC}")
+        s.send(f"{file_to_send.name}{SEPARATOR}{file_to_send.path.split(filepath)[1]}{SEPARATOR}{file_to_send.size}{SEPARATOR}{file_to_send.is_dir}".encode())
         time.sleep(1)
         if file_to_send.is_dir == False:
             progress = tqdm.tqdm(range(file_to_send.size),f"Sending {file_to_send.name}",unit="B",unit_scale=True,unit_divisor=1024)
@@ -187,10 +191,18 @@ def main():
     menu = int(menu)
 
     if(menu == 1):
-        filename = input("Nome do arquivo \n")
+        filepath = button.select_file_or_folder()
+        if platform.system() == "Windows":
+            filepath.strip("\\")
+            filepath=filepath.replace("/",barra)
+        print(filepath)
+        sep = filepath.split(barra)
+        filename = sep[len(sep)-1]
+        filepath = filepath.strip(filename)
+        print(f"Filepath: {filepath}  filename: {filename}")
         host = input("Endereço ipv6 do host")
         port = SERVER_PORT
-        send_file(filename, host, port)
+        send_file(filename,filepath, host, port)
     if(menu == 2):
         receiv()
 
