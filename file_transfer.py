@@ -45,11 +45,10 @@ class files:
 
 def get_current_ipv6():
 
-    """Get the current external IPv6 address or return None if no connection to the IPify service is possible"""
-    try:
-        return requests.get("https://api6.ipify.org", timeout=5).text
-    except requests.exceptions.ConnectionError as ex:
-        return "No IPv6 ENABLED"
+    hostname = socket.gethostname()
+    ipv6 = socket.getaddrinfo(hostname,None, socket.AF_INET6)[0][4][0]
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}IPV6: {ipv6}{bcolors.ENDC}")
+    return ipv6
 
 
 def dir_walk(path,osfiles, total_size):
@@ -70,7 +69,6 @@ def dir_walk(path,osfiles, total_size):
 
 def receiv():
     host = get_current_ipv6()
-    print("IPV6 = "+host)
     port = SERVER_PORT
 
     #Create socket server
@@ -79,10 +77,10 @@ def receiv():
     s.bind((host,port))
     #Listen port
     s.listen(20)
-    print(f"{bcolors.BOLD}{bcolors.FAIL}[*] Listening as {host}{port}")
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}[*] Listening as {host}{port}{bcolors.ENDC}")
     #Accept connection
     client_socket, address = s.accept()
-    print(f"[+] {address} is connected{bcolors.ENDC}")
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}[+] {address} is connected{bcolors.ENDC}")
 
     #receiv the total number os files and directories that will be transmited
     # send("{total_files}{SEPARATOR}{total_size}")
@@ -145,7 +143,7 @@ def send_file(file_name,host,port):
     total_size = os.path.getsize(file_name)
     # Create de cliente socket
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
-    print(f"[+] Connecting to {host}:{port}")
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}[+] Connecting to {host}:{port}")
     s.connect((host,port))
     print("[+] Connected")
     #First send total files, and total size to be send
