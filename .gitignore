@@ -131,3 +131,5 @@ dmypy.json
 build/
 dist/
 __pycache__/
+
+.venv

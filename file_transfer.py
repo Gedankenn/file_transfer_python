@@ -7,6 +7,7 @@ import time
 import shutil
 import platform
 import button
+from inputimeout import inputimeout
 
 SERVER_PORT = 5001
 BUFFER_SIZE = 1024*4
@@ -177,7 +178,7 @@ def main():
     print("\033[1m\033[91m|1- Send File    |\033[0m")
     print("\033[1m\033[91m|2- Receive File |\033[0m")
     print("\033[1m\033[91m--------------------\n\033[0m")
-    menu = input("Digite o valor da função que deseja: \n")
+    menu = inputimeout(prompt="Digite o valor da função que deseja: \n", timeout=2)
     print(f"{bcolors.ENDC}")
     menu = int(menu)
 
