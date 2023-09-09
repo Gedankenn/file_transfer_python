@@ -11,7 +11,8 @@ from inputimeout import inputimeout
 
 SERVER_PORT = 5001
 BUFFER_SIZE = 1024*4
-SEPARATOR = "<SEPARATOR>"
+SEPARATOR = "<>"
+user = "th00r"
 
 windows = "\\"
 linux = "/"
@@ -167,36 +168,59 @@ def send_file(file_name,filepath,host,port):
     s.close()
     print(f"Transfer Finished{bcolors.ENDC}")
 
+def server_communication():
+    server_host = "144.22.184.24"
+    server_port = 51337
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}[*] Connecting to {server_host}:{server_port}{bcolors.ENDC}")
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+    s.connect((server_host,server_port))
+    msend = user+SEPARATOR+get_current_ipv6()
+    s.send(msend.encode())
+    mrecv = s.recv(BUFFER_SIZE).decode()
+    print(mrecv)
+    s.close()
+
 
 
 
 def main():
-    osfiles = []
-    print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
-    print("\033[1m\033[91m----===== Programa de compartilhamento de arquivos =====----\033[0m")
-    print("\033[1m\033[91m--------------------\033[0m")
-    print("\033[1m\033[91m|1- Send File    |\033[0m")
-    print("\033[1m\033[91m|2- Receive File |\033[0m")
-    print("\033[1m\033[91m--------------------\n\033[0m")
-    menu = inputimeout(prompt="Digite o valor da função que deseja: \n", timeout=2)
-    print(f"{bcolors.ENDC}")
-    menu = int(menu)
+    server_communication()
+    menu = 99
+    while menu == 99:
+        os.system("clear")
+        osfiles = []
+        print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
+        print("\033[1m\033[91m----===== Programa de compartilhamento de arquivos =====----\033[0m")
+        print("\033[1m\033[91m--------------------\033[0m")
+        print("\033[1m\033[91m|0- Exit         |\033[0m")
+        print("\033[1m\033[91m|1- Send File    |\033[0m")
+        print("\033[1m\033[91m|2- Receive File |\033[0m")
+        print("\033[1m\033[91m--------------------\n\033[0m")
+        print("Digite o valor da função que deseja: ",end='')
 
-    if(menu == 1):
-        filepath = button.select_file_or_folder()
-        if platform.system() == "Windows":
-            filepath.strip("\\")
-            filepath=filepath.replace("/",barra)
-        print(filepath)
-        sep = filepath.split(barra)
-        filename = sep[len(sep)-1]
-        filepath = filepath.strip(filename)
-        print(f"Filepath: {filepath}  filename: {filename}")
-        host = input("Endereço ipv6 do host")
-        port = SERVER_PORT
-        send_file(filename,filepath, host, port)
-    if(menu == 2):
-        receiv()
+        try:
+            menu = inputimeout(prompt="", timeout=2)
+        except Exception:
+            menu = 99
+
+        print(f"{bcolors.ENDC}")
+        menu = int(menu)
+
+        if(menu == 1):
+            filepath = button.select_file_or_folder()
+            if platform.system() == "Windows":
+                filepath.strip("\\")
+                filepath=filepath.replace("/",barra)
+            print(filepath)
+            sep = filepath.split(barra)
+            filename = sep[len(sep)-1]
+            filepath = filepath.strip(filename)
+            print(f"Filepath: {filepath}  filename: {filename}")
+            host = input("Endereço ipv6 do host")
+            port = SERVER_PORT
+            send_file(filename,filepath, host, port)
+        if(menu == 2):
+            receiv()
 
 
 if __name__ == "__main__":
