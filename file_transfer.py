@@ -7,6 +7,7 @@ import time
 import shutil
 import platform
 import button
+import sys
 
 SERVER_PORT = 5001
 BUFFER_SIZE = 1024*4
@@ -171,18 +172,36 @@ def send_file(file_name,filepath,host,port):
 
 def main():
     osfiles = []
-    print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
-    print("\033[1m\033[91m----===== Programa de compartilhamento de arquivos =====----\033[0m")
-    print("\033[1m\033[91m--------------------\033[0m")
-    print("\033[1m\033[91m|1- Send File    |\033[0m")
-    print("\033[1m\033[91m|2- Receive File |\033[0m")
-    print("\033[1m\033[91m--------------------\n\033[0m")
-    menu = input("Digite o valor da função que deseja: \n")
-    print(f"{bcolors.ENDC}")
-    menu = int(menu)
+    menu = ''
+    if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+        print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
+        print("This program is used to send and receive files through the network")
+        print("Usage: python3 file_transfer.py [send|receiv] [filepath]")
+        print("send: Send a file to a ipv6 address")
+        print("receiv: Receiv a file from a ipv6 address")
+        print("filepath: Path to the file to be send")
+        print(f"{bcolors.ENDC}")
+    if sys.argv[1] == "send":
+        menu = 1
+    if sys.argv[1] == "receiv":
+        menu = 2
+    else:
+        print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
+        print("\033[1m\033[91m----===== File Transfer =====----\033[0m")
+        print("\033[1m\033[91m--------------------\033[0m")
+        print("\033[1m\033[91m|1- Send File    |\033[0m")
+        print("\033[1m\033[91m|2- Receive File |\033[0m")
+        print("\033[1m\033[91m--------------------\n\033[0m")
+        menu = input("Input: \n")
+        print(f"{bcolors.ENDC}")
+        menu = int(menu)
 
     if(menu == 1):
-        filepath = button.select_file_or_folder()
+        filepath = ""
+        if sys.argv[2] != None:
+            filepath = sys.argv[2]
+        else:
+            filepath = button.select_file_or_folder()
         if platform.system() == "Windows":
             filepath.strip("\\")
             filepath=filepath.replace("/",barra)
@@ -191,7 +210,7 @@ def main():
         filename = sep[len(sep)-1]
         filepath = filepath.strip(filename)
         print(f"Filepath: {filepath}  filename: {filename}")
-        host = input("Endereço ipv6 do host")
+        host = input("Write ipv6 address to connect to:")
         port = SERVER_PORT
         send_file(filename,filepath, host, port)
     if(menu == 2):
