@@ -1,9 +1,21 @@
-# file_transfer_python
-File transfer using socket IPV6 in python to allow transfering files over the Internet.
+# File Transfer in python using ipv6
 
-## How to use:
-The code has implemented both methos, sending and receiving files, to send files:
-### Sending:
-Select the menu option 1, wich will request for the folder or file name to be send, and the ipv6 of the receiver end.
-### Receiving:
-Select the menu option 2, wich will print the ipv6 of the machine and wait for the socket connection to start receiv the files
+This is a simple file transfer program using ipv6 in python. The program uses the socket module to create a connection between the server and the client. The server sends the file to the client using the sendfile() function and the client receives the file using the recv() function embedded in the mainfile.
+
+## Usage
+clone this repo 
+```bash
+git clone git@github.com/Gedankenn/file_transfer_ipv6.git
+```
+
+Install the requirements
+```bash
+pip install -r requirements.txt
+```
+
+Run the program
+```bash
+python file_transfer.py [send/receive] [filename]
+```
+
+## Screenshots
