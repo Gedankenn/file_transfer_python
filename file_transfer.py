@@ -1,8 +1,6 @@
 import socket
 import tqdm
 import os
-import requests
-import argparse
 import time
 import shutil
 import platform
@@ -11,7 +9,7 @@ import sys
 
 SERVER_PORT = 5001
 BUFFER_SIZE = 1024*4
-SEPARATOR = "<SEPARATOR>"
+SEPARATOR = "<||>"
 
 windows = "\\"
 linux = "/"
@@ -46,7 +44,6 @@ class files:
         self.size = os.path.getsize(file_path+barra+file_name)
 
 def get_current_ipv6():
-
     hostname = socket.gethostname()
     ipv6 = socket.getaddrinfo(hostname,None, socket.AF_INET6)[0][4][0]
     print(f"{bcolors.BOLD}{bcolors.OKGREEN}IPV6: {ipv6}{bcolors.ENDC}")
@@ -72,7 +69,6 @@ def dir_walk(path,osfiles, total_size):
 def receiv():
     host = get_current_ipv6()
     port = SERVER_PORT
-
     #Create socket server
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
     #Bind de socket to ipv6 address
@@ -95,13 +91,16 @@ def receiv():
     total_files = int(total_files)
 
     parent_path = "Receiv"
-
+    
+    #Delete the directory if it exists
     if os.path.exists(parent_path):
         shutil.rmtree(parent_path,ignore_errors=True)
     
+    # Create the directory
     os.makedirs(parent_path)
     local_path = os.getcwd()
     files_count = 0
+
     while(files_count < total_files):
         received = client_socket.recv(BUFFER_SIZE).decode()
         file_name,file_path, file_size, is_dir = received.split(SEPARATOR)
@@ -128,7 +127,6 @@ def receiv():
     
     client_socket.close()
     s.close()
-    f.close()
     print(f"{bcolors.BOLD}{bcolors.OKGREEN}Transfer Finished{bcolors.ENDC}")
 
 def send_file(file_name,filepath,host,port):
@@ -171,7 +169,6 @@ def send_file(file_name,filepath,host,port):
 
 
 def main():
-    osfiles = []
     menu = ''
     if sys.argv[1] == "-h" or sys.argv[1] == "--help":
         print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
@@ -210,9 +207,14 @@ def main():
         filename = sep[len(sep)-1]
         filepath = filepath.strip(filename)
         print(f"Filepath: {filepath}  filename: {filename}")
-        host = input("Write ipv6 address to connect to:")
+        
+        if sys.argv[3] != None:
+            host = sys.argv[3]
+        else:
+            host = input("Write ipv6 address to connect to:")
         port = SERVER_PORT
         send_file(filename,filepath, host, port)
+   
     if(menu == 2):
         receiv()
 
