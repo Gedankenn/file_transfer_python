@@ -175,19 +175,23 @@ def main():
         print("This program is used to send and receive files through the network")
         print("Usage: python3 file_transfer.py [send|receiv] [filepath]")
         print("send: Send a file to a ipv6 address")
-        print("receiv: Receiv a file from a ipv6 address")
+        print("receive: Receive a file from a ipv6 address")
         print("filepath: Path to the file to be send")
         print(f"{bcolors.ENDC}")
+        return
+
     if sys.argv[1] == "send":
         menu = 1
-    if sys.argv[1] == "receiv":
+    
+    if sys.argv[1] == "receive":
         menu = 2
+    
     else:
         print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
         print("\033[1m\033[91m----===== File Transfer =====----\033[0m")
         print("\033[1m\033[91m--------------------\033[0m")
-        print("\033[1m\033[91m|1- Send File    |\033[0m")
-        print("\033[1m\033[91m|2- Receive File |\033[0m")
+        print("\033[1m\033[91m|1- Send File      |\033[0m")
+        print("\033[1m\033[91m|2- Receive File   |\033[0m")
         print("\033[1m\033[91m--------------------\n\033[0m")
         menu = input("Input: \n")
         print(f"{bcolors.ENDC}")

@@ -15,7 +15,9 @@ pip install -r requirements.txt
 
 Run the program
 ```bash
-python file_transfer.py [send/receive] [filename]
+python file_transfer.py [send] [filename] [ipv6 address]
+python file_transfer.py [receive]
 ```
 
 ## Screenshots
+![transfer](transfer.png)
