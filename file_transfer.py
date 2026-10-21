@@ -207,7 +207,7 @@ def main():
         else:
             filepath = button.select_file_or_folder()
         if platform.system() == "Windows":
-            filepath.strip("\\")
+            filepath = filepath.rstrip("\\")
             filepath = filepath.replace("/", barra)
         print(filepath)
         sep = filepath.split(barra)
