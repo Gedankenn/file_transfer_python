@@ -66,8 +66,6 @@ def dir_walk(path, osfiles, total_size):
                     dir_walk(path2, osfiles, total_size)
                 else:
                     total_size = total_size+os.path.getsize(path2)
-    else:
-        osfiles.append(files(path, "."))
 
 
 def receiv():
