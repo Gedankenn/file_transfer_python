@@ -69,12 +69,17 @@ def dir_walk(path, osfiles, total_size):
 
 
 def receiv():
-    host = get_current_ipv6()
+    try:
+        host = get_current_ipv6()
+    except (socket.gaierror, IndexError):
+        host = "::"
     port = SERVER_PORT
     # Create socket server
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
-    # Bind de socket to ipv6 address
-    s.bind((host, port))
+    # Bind to all IPv6 interfaces; the address printed above is the one to
+    # give the sender, but binding to it alone fails for link-local or
+    # loopback-only hostname entries
+    s.bind(("::", port))
     # Listen port
     s.listen(20)
     host_port = f"{host}:{port}"
