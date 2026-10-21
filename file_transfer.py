@@ -175,7 +175,7 @@ def send_file(file_name, filepath, host, port):
 
 def main():
     menu = ''
-    if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+    if len(sys.argv) > 1 and (sys.argv[1] == "-h" or sys.argv[1] == "--help"):
         print(f"{bcolors.BOLD}{bcolors.OKGREEN}")
         print("This program is used to send and receive files through the network")
         print("Usage: python3 file_transfer.py [send|receiv] [filepath]")
@@ -185,10 +185,10 @@ def main():
         print(f"{bcolors.ENDC}")
         return
 
-    if sys.argv[1] == "send":
+    if len(sys.argv) > 1 and sys.argv[1] == "send":
         menu = 1
 
-    if sys.argv[1] == "receive":
+    elif len(sys.argv) > 1 and sys.argv[1] == "receive":
         menu = 2
 
     else:
@@ -204,7 +204,7 @@ def main():
 
     if (menu == 1):
         filepath = ""
-        if sys.argv[2] is not None:
+        if len(sys.argv) > 2:
             filepath = sys.argv[2]
         else:
             filepath = button.select_file_or_folder()
@@ -214,10 +214,10 @@ def main():
         print(filepath)
         sep = filepath.split(barra)
         filename = sep[len(sep)-1]
-        filepath = filepath.strip(filename)
+        filepath = filepath[:len(filepath) - len(filename)]
         print(f"Filepath: {filepath}  filename: {filename}")
 
-        if sys.argv[3] is not None:
+        if len(sys.argv) > 3:
             host = sys.argv[3]
         else:
             host = input("Write ipv6 address to connect to:")
